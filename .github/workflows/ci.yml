@@ -1,0 +1,21 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    name: build and test Library
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: .NetCore-SetUp
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # latest 3.1
+    - name: Build
+      run: |
+        dotnet build Lib.sln --configuration Release
+    - name: Test
+      run: |
+        dotnet test Lib.sln --configuration Release
