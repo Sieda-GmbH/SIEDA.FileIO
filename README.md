@@ -1,7 +1,7 @@
 # SIEDA.FileIO
 
-A simple helper library, wrapping around Net's basic File-IO functionality. All code is stateless and contained withing the static class **FileIO**.
-In contrast to Net's default methods, this implementation is a **blocking one**, all methods only return when the full success of the operation has been verified.
+A simple helper library, wrapping around Net's basic File-IO functionality. All code is stateless and contained within the static class **FileIO**.
+In contrast to Net's default methods this implementation is a **blocking one**, all methods only return when the full success of the operation has been verified.
 
 ## Available functionality:
 
