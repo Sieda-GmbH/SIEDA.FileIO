@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build_and_test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     name: build and test Library
     steps:
     - name: Checkout
