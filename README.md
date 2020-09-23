@@ -3,6 +3,18 @@
 A simple helper library, wrapping around Net's basic File-IO functionality. All code is stateless and contained within the static class **FileIO**.
 In contrast to Net's default methods this implementation is a **blocking one**, all methods only return when the full success of the operation has been verified.
 
+## What is this for?
+
+Most file-systems will just receive e.g. your command to copy a file to some place and decide, independently from your C# program, when **exactly** execute this operation shall be executed. Note that 99% of the time, this is perfectly fine as this behavior results in way better performance for your daily operations.
+
+But in some rare use-cases, especially test-setup related ones, you can run into IO-related races when interleaving IO and other code semantics. This library is intended for these rare use-cases, during which you want to ensure an IO-operation has actually been completed before continuing to do something else.
+
+Do not use this when performance is critical.
+
+## Where can I get/download it?
+
+You can find a NuGet-Package at [www.nuget.org](https://www.nuget.org/packages/SIEDA.FileIO/), containing binaries for different frameworks. There are no special dependencies.
+
 ## Available functionality:
 
 Different variants exist for most of these methods and some additional functionality has not been listed here, but the following gives you a quick overview of "the highlights":
