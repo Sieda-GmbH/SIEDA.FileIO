@@ -23,6 +23,7 @@ namespace FileIOHelper
       public static void Delete( string toDelete, int timeToWaitForDeletionInSeconds = 20 )
       {
          var p = Path.GetFullPath( toDelete );
+         Exception lastException = null;
          if( File.Exists( p ) || Directory.Exists( p ) )
          {
             var isFile = File.Exists( p );
@@ -33,7 +34,7 @@ namespace FileIOHelper
             // schedule the file/directory for removal
             int maxMillis = Math.Max( 2, timeToWaitForDeletionInSeconds ) * 1000;
             var lastMillis = Environment.TickCount;
-            const int checkInterval = 2000;//we check every two seconds, which not terribly exact but it does not have to be
+            const int checkInterval = 2000;//we check every two seconds, which is not terribly exact but it does not have to be
             var currentMillis = 0;
 
             while( currentMillis < maxMillis )
@@ -48,8 +49,10 @@ namespace FileIOHelper
                   // exception? if no, we are finished;
                   deleteWasScheduled = true;
                }
-               catch( Exception )
+               catch( Exception e )
                {
+                  lastException = e;
+
                   // we ignore the exception, the file/dir is still in use...    perform a wait, then check again.
                   // if the sleep is pushing us over our timeout, we will still perform one last check.
                   if( currentMillis < maxMillis ) Thread.Sleep( checkInterval );
@@ -59,11 +62,13 @@ namespace FileIOHelper
             }
             if( !deleteWasScheduled )
             {
-               throw new TimeoutException( string.Format( "Failed to schedule deletion of existing {0} '{1}', timeout was {2} seconds.", isFile ? "file" : "directory", p, timeToWaitForDeletionInSeconds ) );
+               throw new TimeoutException( $"Failed to schedule deletion of existing { ( isFile ? "file" : "directory" )} '{p}', timeout was {timeToWaitForDeletionInSeconds} seconds.", lastException );
             }
             #endregion schedule deletion
 
             #region wait for removal
+            maxMillis = maxMillis - currentMillis + checkInterval; //an approximation of the remaining time
+
             // Wait for the ACTUAL DELETION, now that it is triggered (the loop above only tells the OS to schedule a deletion).
             // This code is obviously only executed if the loop above did not throw an exeception, aka we do not wait here if
             // we are already in an error.
@@ -79,10 +84,11 @@ namespace FileIOHelper
                targetIsGone =  isFile ? !File.Exists( p ) : !Directory.Exists( p );
 
                if( targetIsGone ) break;
+               else Thread.Sleep( checkInterval );
             }
             if( !targetIsGone )
             {
-               throw new TimeoutException( string.Format( "Failed to delete existing {0} '{1}' in time after deletion was scheduled, timeout was {2} seconds.", isFile ? "file" : "directory", p, timeToWaitForDeletionInSeconds ) );
+               throw new TimeoutException( $"Failed to delete existing { ( isFile ? "file" : "directory" )} '{p}' in time after deletion was scheduled, timeout was {timeToWaitForDeletionInSeconds} seconds." );
             }
             #endregion wait for removal
          }
@@ -98,6 +104,7 @@ namespace FileIOHelper
       ///<param name="timeToWaitForCopyInSeconds">max amount of time to wait for the OS to actually perform a single copy operation, defaults to 20</param>
       ///<exception cref="TimeoutException">if the timeout is reached and the copy cannot be guaranteed</exception> 
       ///<exception cref="ArgumentException">if source or target do not exist or are otherwise invalid</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
       public static void Copy( string source, string destination, bool overwrite = false, int timeToWaitForCopyInSeconds = 20 )
       {
          var s = Path.GetFullPath( source );
@@ -108,13 +115,13 @@ namespace FileIOHelper
          //verfiy input
          if( !File.Exists( s ) && !Directory.Exists( s ) )
          {
-            throw new ArgumentException( string.Format( "Given source '{0}' does not exist!", s ) );
+            throw new ArgumentException( $"Given source '{s}' does not exist!" );
          }
          var isFile = File.Exists( s );
 
          if( isFile && Directory.Exists( d ) || !isFile && File.Exists( d ) )
          {
-            throw new ArgumentException( string.Format( "Source and Target must both be a {0}!", isFile ? "file" : "directory" ) );
+            throw new ArgumentException( $"Source and Target must both be a { ( isFile ? "file" : "directory" ) }!" );
          }
 
          if( isFile && File.Exists( d ) || !isFile && Directory.Exists( d ) )
@@ -125,7 +132,7 @@ namespace FileIOHelper
             }
             else
             {
-               throw new ArgumentException( string.Format( "Failed to create {0} '{1}' at target '{2}' since that target already exists!", isFile ? "file" : "directory", s, d ) );
+               throw new ArgumentException( $"Failed to create {(isFile ? "file" : "directory")} '{s}' at target '{d}' since that target already exists!" );
             }
          }
 
@@ -134,7 +141,14 @@ namespace FileIOHelper
          {
             var parentDir = Path.GetDirectoryName( d );
             if( parentDir != null && !Directory.Exists( parentDir ) ) CreateDir( parentDir );
-            File.Copy( s, d );
+            try
+            {
+               File.Copy( s, d );
+            }
+            catch( Exception e )
+            {
+               throw new IOException( $"Failed to copy '{s}' to '{d}'.", e );
+            }
             WaitForFileWrite( d, timeToWaitForCopyInSeconds );
          }
          else
@@ -151,7 +165,13 @@ namespace FileIOHelper
             foreach( string oldPath in Directory.GetFiles( s, "*.*", SearchOption.AllDirectories ) )
             {
                var newPath = ReplacePath( oldPath );
-               File.Copy( oldPath, newPath );
+               try{
+                  File.Copy( oldPath, newPath );
+               }
+               catch( Exception e )
+               {
+                  throw new IOException( $"Failed to copy '{oldPath}' to '{newPath}'.", e );
+               }
                WaitForFileWrite( newPath, timeToWaitForCopyInSeconds );
             }
          }
@@ -165,8 +185,8 @@ namespace FileIOHelper
             path = ( path.Length == 0 ) ? (p + Path.DirectorySeparatorChar) : Path.Combine( path, p );
             if( File.Exists( path ) )
             {
-               throw new ArgumentException( string.Format( //create precise exception for the user
-                  "Path '{0}' refers to a file and thus cannot be part of a directory path!", path ) );
+               throw new ArgumentException( //create precise exception for the user
+                  $"Path '{path}' refers to a file and thus cannot be part of a directory path!" );
             }
 
             var parentDir = Path.GetDirectoryName( path );
@@ -177,12 +197,19 @@ namespace FileIOHelper
 
             var dirExistsNow = false;
 
-            Directory.CreateDirectory( path );
+            try
+            {
+               Directory.CreateDirectory( path );
+            }
+            catch( Exception e )
+            {
+               throw new IOException( $"Failed to create directory '{path}'", e );
+            }
 
             int maxMillis = Math.Max( 2, timeToWait ) * 1000;
             var lastMillis = Environment.TickCount;
             var currentMillis = 0;
-            const int checkInterval = 2000; //we check every two seconds, which not terribly exact but it does not have to be
+            const int checkInterval = 2000; //we check every two seconds, which is not terribly exact but it does not have to be
 
             while( currentMillis < maxMillis )
             {
@@ -200,7 +227,7 @@ namespace FileIOHelper
 
             if( !dirExistsNow )
             {
-               throw new TimeoutException( string.Format( "Failed to create directory '{0}' in time after deletion was scheduled, timeout was {1} seconds.", path, timeToWait ) );
+               throw new TimeoutException( $"Failed to create directory '{path}' in time after deletion was scheduled, timeout was {timeToWait} seconds." );
             }
          }
       }
@@ -210,11 +237,13 @@ namespace FileIOHelper
          int maxMillis = Math.Max( 2, secondsToWait ) * 1000;
 
          FileStream stream = null;
-         FileInfo fileInfo = null;
+         FileInfo fileInfo;
 
          var lastMillis = Environment.TickCount;
          var currentMillis = 0;
-         const int checkInterval = 2000;//we check every two seconds, which not terribly exact but it does not have to be
+         const int checkInterval = 2000;//we check every two seconds, which is not terribly exact but it does not have to be
+
+         Exception lastException = null;
 
          while( currentMillis < maxMillis )
          {
@@ -239,8 +268,10 @@ namespace FileIOHelper
                //exit the loop!
                return;
             }
-            catch( Exception )
+            catch( Exception e )
             {
+               lastException = e;
+
                //do not leave any half-open streams behind
                if( stream != null )
                {
@@ -254,7 +285,7 @@ namespace FileIOHelper
             }
          }
 
-         throw new TimeoutException( string.Format( "Failed to create file '{0}', the file is still 'locked' after {1} seconds. It is either unavailable because it is still being written to or does not even exist at all and its creation is being blocked by something else.", file, secondsToWait ) );
+         throw new TimeoutException( $"Failed to create file '{file}', the file is still 'locked' after {secondsToWait} seconds. It is either unavailable because it is still being written to or does not even exist at all and its creation is being blocked by something else.", lastException );
       }
 
       ///<summary>
@@ -265,7 +296,7 @@ namespace FileIOHelper
       ///<param name="destination">a filepath detailing a (usually nonexistent) file or directory, specifying the target destination</param>
       ///<param name="timeToWaitForMoveInSeconds">max amount of time to wait for the OS to actually perform a single move operation, defaults to 20</param>
       ///<exception cref="TimeoutException">if the timeout is reached and the move's success cannot be guaranteed</exception> 
-      ///<exception cref="ArgumentException">if source does not exit or the target does already exists (no overwrite via move)</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
       public static void Move( string source, string destination, int timeToWaitForMoveInSeconds = 20 )
       {
          Copy( source, destination, false, timeToWaitForMoveInSeconds );
@@ -277,6 +308,7 @@ namespace FileIOHelper
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
       ///<exception cref="ArgumentException">if the path is invalid</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
       public static void CreateDir( string targetPath, int timeToWaitInSeconds = 20 )
       {
          var p = Path.GetFullPath( targetPath );
@@ -299,7 +331,22 @@ namespace FileIOHelper
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
       public static void CreateFile( string targetFile, int timeToWaitInSeconds = 20 )
       {
-         ActuallyCreateFile( targetFile, null, timeToWaitInSeconds );
+         ActuallyCreateFile( targetFile, null, false, timeToWaitInSeconds );
+      }
+
+      ///<summary>
+      ///<para>Creates a new zero-bytes file under the given path, eliminating any previous file at this location!</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///</summary>
+      ///<param name="targetFile">a filepath to the file you want to create</param>
+      ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
+      ///defaults to 20</param> 
+      ///<exception cref="ArgumentNullException">if the path is NULL</exception> 
+      ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
+      ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
+      public static void CreateFileAnew( string targetFile, int timeToWaitInSeconds = 20 )
+      {
+         ActuallyCreateFile( targetFile, null, true, timeToWaitInSeconds );
       }
 
       ///<summary>
@@ -317,7 +364,24 @@ namespace FileIOHelper
       public static void CreateFile( string targetFile, string contentToWrite, int timeToWaitInSeconds = 20 )
       {
          if( contentToWrite == null ) throw new ArgumentNullException( "String to write cannot be NULL" );
-         ActuallyCreateFile( targetFile, Encoding.UTF8.GetBytes( contentToWrite ), timeToWaitInSeconds );
+         ActuallyCreateFile( targetFile, Encoding.UTF8.GetBytes( contentToWrite ), false, timeToWaitInSeconds );
+      }
+
+      ///<summary>
+      ///<para>Creates a file with the specified string (encoded as UTF-8) under the given path, eliminating any previous file at this location!</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///</summary>
+      ///<param name="targetFile">a filepath to the file you want to create</param>
+      ///<param name="contentToWrite">the content to write into the file</param>
+      ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
+      ///defaults to 20</param>
+      ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
+      ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
+      ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
+      public static void CreateFileAnew( string targetFile, string contentToWrite, int timeToWaitInSeconds = 20 )
+      {
+         if( contentToWrite == null ) throw new ArgumentNullException( "String to write cannot be NULL" );
+         ActuallyCreateFile( targetFile, Encoding.UTF8.GetBytes( contentToWrite ), true, timeToWaitInSeconds );
       }
 
       ///<summary>
@@ -335,27 +399,58 @@ namespace FileIOHelper
       public static void CreateFile( string targetFile, byte[] contentToWrite, int timeToWaitInSeconds = 20 )
       {
          if( contentToWrite == null ) throw new ArgumentNullException( "Content to write cannot be NULL" );
-         ActuallyCreateFile( targetFile, contentToWrite, timeToWaitInSeconds );
+         ActuallyCreateFile( targetFile, contentToWrite, false, timeToWaitInSeconds );
       }
 
-      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, int timeToWaitInSeconds = 20 )
+      ///<summary>
+      ///<para>Creates a file with the content under the given path, eliminating any previous file at this location!</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///</summary>
+      ///<param name="targetFile">a filepath to the file you want to create</param>
+      ///<param name="contentToWrite">the content to write into the file</param>
+      ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
+      ///defaults to 20</param>s
+      ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
+      ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
+      ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
+      public static void CreateFileAnew( string targetFile, byte[] contentToWrite, int timeToWaitInSeconds = 20 )
+      {
+         if( contentToWrite == null ) throw new ArgumentNullException( "Content to write cannot be NULL" );
+         ActuallyCreateFile( targetFile, contentToWrite, true, timeToWaitInSeconds );
+      }
+
+      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, bool overwrite, int timeToWaitInSeconds)
       {
          var p = Path.GetFullPath( targetFile );
          if( File.Exists( p ) )
          {
-            throw new ArgumentException( string.Format( "File '{0}' already exists!", p ) );
+            if( overwrite )
+            {
+               Delete( p, timeToWaitInSeconds );
+            }
+            else
+            {
+               throw new ArgumentException( $"File '{p}' already exists!" );
+            }
          }
 
          var dir = Path.GetDirectoryName( p );
          CreateDir( dir, timeToWaitInSeconds );
 
          var tmpFile = Path.GetTempFileName();
-         if ( contentToWrite != null ) File.WriteAllBytes( tmpFile, contentToWrite );
+         try
+         {
+            if( contentToWrite != null ) File.WriteAllBytes( tmpFile, contentToWrite );
+         }
+         catch( Exception e )
+         {
+            throw new IOException( $"Failed to write into file '{tmpFile}', which is to be moved to '{p}' afterwards.", e );
+         }
          Move( tmpFile, p, timeToWaitInSeconds );
 
          if( !Directory.GetFiles( dir, "*" ).Select( s => s.ToLower() ).Contains( p.ToLower() ) )
          {
-            throw new IOException( string.Format( "Failed to detect File '{0}' with full path '{1}' on the drive, although the operation reported a success. The most likely explanation is that the path or filename you entered is invalid for a case-insensitive Windows File System but it tried to cope with it anyway.", targetFile, p ) );
+            throw new IOException( $"Failed to detect File '{p}' on the drive, although the operation success was confirmed by the OS. The most likely explanation is that the path or filename you entered is invalid for your File System but it tried to cope with it anyway." );
          }
          //no need to verify the write, we were able to MOVE the file after all ;-)
       }
@@ -368,26 +463,33 @@ namespace FileIOHelper
       ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite)</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after 20 seconds</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
       ///<returns>an upper-case, human-readable MD5-Hash</returns>
       public static string ComputeMd5HashForFile( string targetFile )
       {
-         var p = Path.GetFullPath( targetFile );
-         if( !File.Exists( p ) )
-         {
-            throw new ArgumentException( string.Format ("File '{0}' does not exist!", p ) );
-         }
-
          byte[] hash = null;
-         using( var md5 = MD5.Create() )
+         try
          {
-            using( var stream = File.OpenRead( p ) )
+            var p = Path.GetFullPath( targetFile );
+            if( !File.Exists( p ) )
             {
-               hash = md5.ComputeHash( stream );
+               throw new ArgumentException( $"File '{p}' does not exist!" );
             }
+            using( var md5 = MD5.Create() )
+            {
+               using( var stream = File.OpenRead( p ) )
+               {
+                  hash = md5.ComputeHash( stream );
+               }
+            }
+         }
+         catch( Exception e )
+         {
+            throw new IOException( $"Failed to access '{targetFile}'", e );
          }
 
          if ( hash == null )
-            throw new IOException( string.Format( "Failed to compute a Hash for file '{0}' due to unknown reasons.", targetFile ) );
+            throw new IOException( $"Failed to compute a Hash for file '{targetFile}' due to unknown reasons." );
 
          // re-encode the bytes into readable a string
          StringBuilder sb = new StringBuilder();

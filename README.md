@@ -9,7 +9,7 @@ Most file-systems will just receive e.g. your command to copy a file to some pla
 
 But in some rare use-cases, especially test-setup related ones, you can run into IO-related races when interleaving IO and other code semantics. This library is intended for these rare use-cases, during which you want to ensure an IO-operation has actually been completed before continuing to do something else.
 
-Do not use this when performance is critical.
+Do not use this library when performance is critical, your file-systems is doing the things it does for a reason!
 
 ## Where can I get/download it?
 

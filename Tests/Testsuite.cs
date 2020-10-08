@@ -130,6 +130,30 @@ namespace FileIOHelper.Tests
       }
 
       [Test]
+      public void CreateDoesNotOverwrite()
+      {
+         var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
+         var file = Path.Combine( dir, "testfile.txt" );
+         FileIO.CreateFile( file, new byte[] { 1, 2, 3, 4, 5 } );
+
+         Assert.That( File.Exists( file ), Is.True ); // new directory and file now exist!
+         Assert.Throws<ArgumentException>( () => FileIO.CreateFile( file, new byte[] { 6, 7, 8, 9 } ) );
+         Assert.That( new byte[] { 1, 2, 3, 4, 5 }, Is.EquivalentTo( File.ReadAllBytes( file ) ) );
+      }
+
+      [Test]
+      public void CreateAnew()
+      {
+         var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
+         var file = Path.Combine( dir, "testfile.txt" );
+         FileIO.CreateFile( file, new byte[] { 1,2,3,4,5 } );
+         FileIO.CreateFileAnew( file, new byte[] { 6, 7, 8, 9 } );
+
+         Assert.That( File.Exists( file ), Is.True ); // new directory and file now exist!
+         Assert.That( new byte[] { 6, 7, 8, 9 }, Is.EquivalentTo( File.ReadAllBytes(file) ) );
+      }
+
+      [Test]
       public void MoveFileFromAtoB()
       {
          var dirA = Path.Combine( Path.Combine( testDir, "MoveFileFromAtoB" ), "a" );
