@@ -303,7 +303,10 @@ namespace SIEDA.FileIO
          Delete( source, timeToWaitForMoveInSeconds );
       }
 
-      ///<summary>Ensures all directories and subdirectories in the specified path exist, creating them if necessary.</summary>
+      ///<summary>
+      ///<para>Ensures the specified directory-path exists.</para>
+      ///<para>This method recursively creates all required sub-directories to achieve this goal.</para>
+      ///</summary>
       ///<param name="targetPath">directory to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -316,6 +319,24 @@ namespace SIEDA.FileIO
          {
             ActuallyCreateDir( p, timeToWaitInSeconds );
          }
+      }
+      ///<summary>
+      ///<para>Ensures the specified directory-path exists *and* is fresh, eliminating any existing directory if necessary.</para>
+      ///<para>This method recursively creates all required sub-directories to achieve this goal, but only the specified directory is replaced if necessary.</para>
+      ///</summary>
+      ///<param name="targetPath">directory to recreate</param>
+      ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
+      ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
+      ///<exception cref="ArgumentException">if the path is invalid</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
+      public static void CreateDirAnew( string targetPath, int timeToWaitInSeconds = 30 )
+      {
+         var p = Path.GetFullPath( targetPath );
+         if( Directory.Exists( p ) )
+         {
+            Delete( p );
+         }
+         ActuallyCreateDir( p, timeToWaitInSeconds );
       }
 
       ///<summary>
