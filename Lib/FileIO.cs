@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace FileIOHelper
+namespace SIEDA.FileIO
 {
    ///<summary>Contains various static FileIO-Functionality</summary>
    public static class FileIO

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace FileIOHelper.Tests
+namespace SIEDA.FileIO.Testing
 {
    /** Ugly integration Tests */
    public class FileIOTestsuite
