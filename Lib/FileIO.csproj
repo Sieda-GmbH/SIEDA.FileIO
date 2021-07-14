@@ -23,14 +23,14 @@
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO</AssemblyName>
-      <TargetFramework>netcoreapp3.1</TargetFramework>
-      <TargetFrameworks>netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
+      <TargetFramework>net5.0</TargetFramework>
+      <TargetFrameworks>net5.0;netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
 
       <!-- generating C# Documentation -->
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
       
       <!-- for details, see LICENSE-file in this repository -->
-      <Copyright>Copyright © 2020 SIEDA GmbH Kaiserslautern</Copyright>
+      <Copyright>Copyright © 2021 SIEDA GmbH Kaiserslautern</Copyright>
 
       <!-- signing compiled output -->
       <SignAssembly>true</SignAssembly>
