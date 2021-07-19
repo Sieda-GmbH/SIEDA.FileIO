@@ -9,7 +9,7 @@ using System.Threading;
 namespace SIEDA.FileIO
 {
    ///<summary>Contains various static FileIO-Functionality</summary>
-   public static class FileIO
+   public static class IOHelper
    {
       ///<summary>
       ///<para>Deletes a file or directory on the drive if it exists. Method blocks until the deletion is being performed by the OS (or the timeout is reached).</para>
@@ -140,7 +140,7 @@ namespace SIEDA.FileIO
          if( isFile )
          {
             var parentDir = Path.GetDirectoryName( d );
-            if( parentDir != null && !Directory.Exists( parentDir ) ) CreateDir( parentDir );
+            if( parentDir != null && !Directory.Exists( parentDir ) ) EnsureDirExists( parentDir );
             try
             {
                File.Copy( s, d );
@@ -312,7 +312,7 @@ namespace SIEDA.FileIO
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
       ///<exception cref="ArgumentException">if the path is invalid</exception> 
       ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
-      public static void CreateDir( string targetPath, int timeToWaitInSeconds = 20 )
+      public static void EnsureDirExists( string targetPath, int timeToWaitInSeconds = 20 )
       {
          var p = Path.GetFullPath( targetPath );
          if( !Directory.Exists( p ) )
@@ -341,7 +341,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a new zero-bytes file under the given path, unless that file already exists!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
@@ -357,7 +357,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a new zero-bytes file under the given path, eliminating any previous file at this location!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
@@ -372,7 +372,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a file with the specified string (encoded as UTF-8) under the given path, unless that file already exists!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="contentToWrite">the content to write into the file</param>
@@ -390,7 +390,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a file with the specified string (encoded as UTF-8) under the given path, eliminating any previous file at this location!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="contentToWrite">the content to write into the file</param>
@@ -407,7 +407,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a file with the content under the given path, unless that file already exists!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="contentToWrite">the content to write into the file</param>
@@ -425,7 +425,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Creates a file with the content under the given path, eliminating any previous file at this location!</para>
-      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="CreateDir"/>'.</para>
+      ///<para>NOTE: The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="contentToWrite">the content to write into the file</param>
@@ -456,7 +456,7 @@ namespace SIEDA.FileIO
          }
 
          var dir = Path.GetDirectoryName( p );
-         CreateDir( dir, timeToWaitInSeconds );
+         EnsureDirExists( dir, timeToWaitInSeconds );
 
          var tmpFile = Path.GetTempFileName();
          try

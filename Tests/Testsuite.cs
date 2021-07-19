@@ -25,18 +25,18 @@ namespace SIEDA.FileIO.Testing
          testDir = Path.Combine( Path.GetTempPath(), "FileIOTestsuite" );
          Exception exception = null;
 
-         try { FileIO.Delete( testDir ); } catch( Exception e ) { exception = exception == null ? e : exception; }
+         try { IOHelper.Delete( testDir ); } catch( Exception e ) { exception = exception == null ? e : exception; }
          try { Directory.Delete( testDir, true ); } catch( Exception e ) { exception = exception == null ? e : exception; }
          if( Directory.Exists( testDir ) ) throw new Exception( "TestSetup failed, could not delete previous integration-test directory!", exception );
 
          foreach( var file in testFilesWithRelativePath )
          {
-            try { FileIO.Delete( file ); } catch( Exception e ) { exception = exception == null ? e : exception; }
+            try { IOHelper.Delete( file ); } catch( Exception e ) { exception = exception == null ? e : exception; }
             try { File.Delete( file ); } catch( Exception e ) { exception = exception == null ? e : exception; }
             if( File.Exists( file ) ) throw new Exception( $"TestSetup failed, could not delete previous integration-test file '{file}'!", exception );
          }
 
-         try { FileIO.CreateDir( testDir ); } catch( Exception e ) { exception = exception == null ? e : exception; }
+         try { IOHelper.EnsureDirExists( testDir ); } catch( Exception e ) { exception = exception == null ? e : exception; }
          try { Directory.CreateDirectory( testDir ); } catch( Exception e ) { exception = exception == null ? e : exception; }
          if( !Directory.Exists( testDir ) ) throw new Exception( "TestSetup failed, could not create integration-test directory!", exception );
       }
@@ -45,7 +45,7 @@ namespace SIEDA.FileIO.Testing
       public void CreateDir()
       {
          var dir = Path.Combine( Path.Combine( Path.GetFullPath( testDir ), "CreateDir" ), "my little directory with spaces" );
-         FileIO.CreateDir( dir );
+         IOHelper.EnsureDirExists( dir );
 
          Assert.That( Directory.Exists( dir ), Is.True );
       }
@@ -54,34 +54,34 @@ namespace SIEDA.FileIO.Testing
       public void InvalidPath()
       {
          var existingDir = Path.Combine( testDir, "ForInvalidPathTest" );
-         FileIO.CreateDir( existingDir );
-         FileIO.CreateFile( Path.Combine( existingDir, "testfile.txt" ) );
+         IOHelper.EnsureDirExists( existingDir );
+         IOHelper.CreateFile( Path.Combine( existingDir, "testfile.txt" ) );
 
          var dirForTest = Path.Combine( testDir, "InvalidPath" );
-         FileIO.CreateDir( dirForTest );
+         IOHelper.EnsureDirExists( dirForTest );
 
          Func<string, string> MakeInput = (string casename) =>
             Path.Combine( Path.Combine( dirForTest, casename ), "3k%f:4,h<.(f{d{s;@k#^h&j!" );
 
-         Assert.Throws<IOException>( () => FileIO.CreateDir( MakeInput( "CreateDir" ) ) );
-         Assert.Throws<IOException>( () => FileIO.CreateFile( MakeInput( "CreateFile" ) ) );
-         Assert.Throws<ArgumentException>( () => FileIO.Move( MakeInput( "MoveFrom" ), existingDir ) );
-         Assert.Throws<ArgumentException>( () => FileIO.Copy( MakeInput( "CreateFrom" ), existingDir ) );
-         Assert.Throws<IOException>( () => FileIO.Move( existingDir, MakeInput( "MoveTo" ) ) );
-         Assert.Throws<IOException>( () => FileIO.Copy( existingDir, MakeInput( "CopyTo" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.EnsureDirExists( MakeInput( "CreateDir" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.CreateFile( MakeInput( "CreateFile" ) ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Move( MakeInput( "MoveFrom" ), existingDir ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Copy( MakeInput( "CreateFrom" ), existingDir ) );
+         Assert.Throws<IOException>( () => IOHelper.Move( existingDir, MakeInput( "MoveTo" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.Copy( existingDir, MakeInput( "CopyTo" ) ) );
 
-         FileIO.Delete( MakeInput( "Delete" ) ); //throws nothing because the input can NEVER exist on a Windows FileSystem
+         IOHelper.Delete( MakeInput( "Delete" ) ); //throws nothing because the input can NEVER exist on a Windows FileSystem
       }
 
       [Test]
       public void DeleteDir()
       {
          var dir = Path.Combine( testDir, "DeleteDir" );
-         FileIO.CreateDir( dir );
+         IOHelper.EnsureDirExists( dir );
          var file = Path.Combine( dir, "testfile.txt" );
-         FileIO.CreateFile( file );
+         IOHelper.CreateFile( file );
 
-         FileIO.Delete( dir );
+         IOHelper.Delete( dir );
          Assert.That( Directory.Exists( dir ), Is.False ); //file is obviously gone as well
       }
 
@@ -89,11 +89,11 @@ namespace SIEDA.FileIO.Testing
       public void DeleteFile()
       {
          var dir = Path.Combine( testDir, "DeleteFile" );
-         FileIO.CreateDir( dir );
+         IOHelper.EnsureDirExists( dir );
          var file = Path.Combine( dir, "testfile.txt" );
-         FileIO.CreateFile( file );
+         IOHelper.CreateFile( file );
 
-         FileIO.Delete( file );
+         IOHelper.Delete( file );
          Assert.That( File.Exists( dir ), Is.False ); //file is gone...
          Assert.That( Directory.Exists( dir ), Is.True ); //...but directory remains
       }
@@ -102,7 +102,7 @@ namespace SIEDA.FileIO.Testing
       public void DeleteNonexistingDir()
       {
          var dir = Path.Combine( Path.Combine( testDir, "Nonexisting" ), "AlsoNonExisting" );
-         FileIO.Delete( dir );
+         IOHelper.Delete( dir );
          Assert.That( Directory.Exists( dir ), Is.False );
       }
 
@@ -113,18 +113,18 @@ namespace SIEDA.FileIO.Testing
          var file1 = Path.Combine( dir, "testfile.txt" );
          var file2 = Path.Combine( dir, "my little testfile with spaces.txt" );
 
-         FileIO.CreateFile( file1 );
+         IOHelper.CreateFile( file1 );
          Assert.That( File.Exists( file1 ), Is.True );
-         FileIO.CreateFile( file2 );
+         IOHelper.CreateFile( file2 );
          Assert.That( File.Exists( file2 ), Is.True );
 
 
-         FileIO.Delete( file1 );
+         IOHelper.Delete( file1 );
          Assert.That( Directory.Exists( dir ), Is.True ); //dir not touched
          Assert.That( File.Exists( file1 ), Is.False );
          Assert.That( File.Exists( file2 ), Is.True ); //other file not touched
 
-         FileIO.Delete( file2 );
+         IOHelper.Delete( file2 );
          Assert.That( Directory.Exists( dir ), Is.True );
          Assert.That( File.Exists( file2 ), Is.False );
       }
@@ -134,10 +134,10 @@ namespace SIEDA.FileIO.Testing
       {
          var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
          var file = Path.Combine( dir, "testfile.txt" );
-         FileIO.CreateFile( file, new byte[] { 1, 2, 3, 4, 5 } );
+         IOHelper.CreateFile( file, new byte[] { 1, 2, 3, 4, 5 } );
 
          Assert.That( File.Exists( file ), Is.True ); // new directory and file now exist!
-         Assert.Throws<ArgumentException>( () => FileIO.CreateFile( file, new byte[] { 6, 7, 8, 9 } ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.CreateFile( file, new byte[] { 6, 7, 8, 9 } ) );
          Assert.That( new byte[] { 1, 2, 3, 4, 5 }, Is.EquivalentTo( File.ReadAllBytes( file ) ) );
       }
 
@@ -146,8 +146,8 @@ namespace SIEDA.FileIO.Testing
       {
          var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
          var file = Path.Combine( dir, "testfile.txt" );
-         FileIO.CreateFile( file, new byte[] { 1,2,3,4,5 } );
-         FileIO.CreateFileAnew( file, new byte[] { 6, 7, 8, 9 } );
+         IOHelper.CreateFile( file, new byte[] { 1,2,3,4,5 } );
+         IOHelper.CreateFileAnew( file, new byte[] { 6, 7, 8, 9 } );
 
          Assert.That( File.Exists( file ), Is.True ); // new directory and file now exist!
          Assert.That( new byte[] { 6, 7, 8, 9 }, Is.EquivalentTo( File.ReadAllBytes(file) ) );
@@ -162,11 +162,11 @@ namespace SIEDA.FileIO.Testing
          var fileA = Path.Combine( dirA, "testfile.txt" );
          var fileB = Path.Combine( dirB, "testfile.txt" );
 
-         FileIO.CreateDir( dirA );
-         FileIO.CreateFile( fileA );
+         IOHelper.EnsureDirExists( dirA );
+         IOHelper.CreateFile( fileA );
          //B does not exist, not even partially!
 
-         FileIO.Move( fileA, fileB );
+         IOHelper.Move( fileA, fileB );
 
          Assert.That( File.Exists( fileA ), Is.False ); //file was moved
          Assert.That( Directory.Exists( dirA ), Is.True ); //directory was not touched
@@ -182,11 +182,11 @@ namespace SIEDA.FileIO.Testing
          var fileA = Path.Combine( dirA, "testfile.txt" );
          var fileB = Path.Combine( dirB, "testfile.txt" );
 
-         FileIO.CreateDir( dirA );
-         FileIO.CreateFile( fileA );
+         IOHelper.EnsureDirExists( dirA );
+         IOHelper.CreateFile( fileA );
          //B does not exist!
 
-         FileIO.Copy( fileA, fileB );
+         IOHelper.Copy( fileA, fileB );
 
          Assert.That( File.Exists( fileA ), Is.True ); //file was copied, old file still exists
          Assert.That( Directory.Exists( dirA ), Is.True ); //directory was not touched either
@@ -206,12 +206,12 @@ namespace SIEDA.FileIO.Testing
          var subfileA = Path.Combine( subDirA, "testfile2.txt" );
          var subfileB = Path.Combine( subDirB, "testfile2.txt" );
 
-         FileIO.CreateDir( subDirA );
-         FileIO.CreateFile( fileA );
-         FileIO.CreateFile( subfileA );
+         IOHelper.EnsureDirExists( subDirA );
+         IOHelper.CreateFile( fileA );
+         IOHelper.CreateFile( subfileA );
          //B does not exist, not even partially!
 
-         FileIO.Move( dirA, dirB );
+         IOHelper.Move( dirA, dirB );
 
          Assert.That( File.Exists( fileA ), Is.False ); //file was moved
          Assert.That( Directory.Exists( dirA ), Is.False ); //old directory does not exist anymore
@@ -240,15 +240,15 @@ namespace SIEDA.FileIO.Testing
 
          var oldFileInB = Path.Combine( subDirB1, "oldfile.txt" );
 
-         FileIO.CreateDir( subDirA1 );
-         FileIO.CreateFile( fileA );
-         FileIO.CreateFile( subfileA1 );
-         FileIO.CreateFile( subfileA2 );
+         IOHelper.EnsureDirExists( subDirA1 );
+         IOHelper.CreateFile( fileA );
+         IOHelper.CreateFile( subfileA1 );
+         IOHelper.CreateFile( subfileA2 );
 
-         FileIO.CreateDir( subDirB1 );   // B's dir-structure exists partially and...
-         FileIO.CreateFile( oldFileInB );// ...has an existing file in there!
+         IOHelper.EnsureDirExists( subDirB1 );   // B's dir-structure exists partially and...
+         IOHelper.CreateFile( oldFileInB );// ...has an existing file in there!
 
-         FileIO.Copy( dirA, dirB, true /* must overwrite */ );
+         IOHelper.Copy( dirA, dirB, true /* must overwrite */ );
 
          Assert.That( Directory.Exists( dirA ), Is.True ); // old directory exists...
          Assert.That( File.Exists( fileA ), Is.True ); // ...and has the right content...
@@ -272,10 +272,10 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile.txt" );
 
-         FileIO.CreateFile( sourceFile );
-         FileIO.CreateFile( targetFile );
+         IOHelper.CreateFile( sourceFile );
+         IOHelper.CreateFile( targetFile );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Copy( sourceFile, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Copy( sourceFile, targetFile ) );
       }
 
       [Test]
@@ -287,10 +287,10 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile.txt" );
 
-         FileIO.CreateFile( sourceFile );
-         FileIO.CreateFile( targetFile );
+         IOHelper.CreateFile( sourceFile );
+         IOHelper.CreateFile( targetFile );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Move( sourceFile, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Move( sourceFile, targetFile ) );
       }
 
       [Test]
@@ -302,7 +302,7 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile.txt" );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Copy( sourceFile, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Copy( sourceFile, targetFile ) );
       }
 
       [Test]
@@ -314,7 +314,7 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile.txt" );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Move( sourceFile, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Move( sourceFile, targetFile ) );
       }
 
       [Test]
@@ -326,11 +326,11 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile2.txt" );
 
-         FileIO.CreateFile( sourceFile );
-         FileIO.CreateFile( targetFile );
+         IOHelper.CreateFile( sourceFile );
+         IOHelper.CreateFile( targetFile );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Copy( sourceFile, dirTarget ) );
-         Assert.Throws<ArgumentException>( () => FileIO.Copy( dirSource, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Copy( sourceFile, dirTarget ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Copy( dirSource, targetFile ) );
       }
 
       [Test]
@@ -342,11 +342,11 @@ namespace SIEDA.FileIO.Testing
          var sourceFile = Path.Combine( dirSource, "testfile.txt" );
          var targetFile = Path.Combine( dirTarget, "testfile2.txt" );
 
-         FileIO.CreateFile( sourceFile );
-         FileIO.CreateFile( targetFile );
+         IOHelper.CreateFile( sourceFile );
+         IOHelper.CreateFile( targetFile );
 
-         Assert.Throws<ArgumentException>( () => FileIO.Move( sourceFile, dirTarget ) );
-         Assert.Throws<ArgumentException>( () => FileIO.Move( dirSource, targetFile ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Move( sourceFile, dirTarget ) );
+         Assert.Throws<ArgumentException>( () => IOHelper.Move( dirSource, targetFile ) );
       }
 
 
@@ -354,9 +354,9 @@ namespace SIEDA.FileIO.Testing
       public void ComputeHashForZeroBytesFile()
       {
          var file = Path.Combine( Path.Combine( testDir, "ComputeHashForZeroBytesFile" ), "testfile.txt" );
-         FileIO.CreateFile( file );
+         IOHelper.CreateFile( file );
 
-         Assert.That( FileIO.ComputeMd5HashForFile( file ), Is.EqualTo( "D41D8CD98F00B204E9800998ECF8427E" ) );
+         Assert.That( IOHelper.ComputeMd5HashForFile( file ), Is.EqualTo( "D41D8CD98F00B204E9800998ECF8427E" ) );
       }
 
       [Test]
@@ -364,14 +364,14 @@ namespace SIEDA.FileIO.Testing
       {
          var file1 = Path.Combine( Path.Combine( testDir, "ComputeHashForIdenticalFiles" ), "testfile1.txt" );
          var file2 = Path.Combine( Path.Combine( testDir, "ComputeHashForIdenticalFiles" ), "testfile2.txt" );
-         FileIO.CreateFile( file1 );
-         FileIO.CreateFile( file2 );
+         IOHelper.CreateFile( file1 );
+         IOHelper.CreateFile( file2 );
          File.WriteAllText( file1, "Hubba" );
          File.WriteAllText( file2, "Hubba" );
 
          var commonHash = "9D745C023AB2C7CAC44557BFB9E5AC8C";
-         Assert.That( FileIO.ComputeMd5HashForFile( file1 ), Is.EqualTo( commonHash ) );
-         Assert.That( FileIO.ComputeMd5HashForFile( file2 ), Is.EqualTo( commonHash ) );
+         Assert.That( IOHelper.ComputeMd5HashForFile( file1 ), Is.EqualTo( commonHash ) );
+         Assert.That( IOHelper.ComputeMd5HashForFile( file2 ), Is.EqualTo( commonHash ) );
       }
 
       [Test]
@@ -379,13 +379,13 @@ namespace SIEDA.FileIO.Testing
       {
          var file1 = Path.Combine( Path.Combine( testDir, "ComputeHashForDifferentFiles" ), "testfile1.txt" );
          var file2 = Path.Combine( Path.Combine( testDir, "ComputeHashForDifferentFiles" ), "testfile2.txt" );
-         FileIO.CreateFile( file1 );
-         FileIO.CreateFile( file2 );
+         IOHelper.CreateFile( file1 );
+         IOHelper.CreateFile( file2 );
          File.WriteAllText( file1, "Hubba" );
          File.WriteAllText( file2, "Hubba-Hub" );
 
          //differences in content means differences in hash!
-         Assert.That( FileIO.ComputeMd5HashForFile( file1 ), Is.Not.EqualTo( FileIO.ComputeMd5HashForFile( file2 ) ) );
+         Assert.That( IOHelper.ComputeMd5HashForFile( file1 ), Is.Not.EqualTo( IOHelper.ComputeMd5HashForFile( file2 ) ) );
       }
 
       [Test]
@@ -394,7 +394,7 @@ namespace SIEDA.FileIO.Testing
          var file = Path.Combine( Path.Combine( testDir, "CreateFile" ), "testfile.txt" );
          var teststring = "hallo world";
 
-         FileIO.CreateFile( file, teststring );
+         IOHelper.CreateFile( file, teststring );
 
          Assert.That( File.Exists( file ), Is.True );
       }
@@ -406,7 +406,7 @@ namespace SIEDA.FileIO.Testing
       {
          var teststring = "hallo world";
 
-         FileIO.CreateFile( file, teststring );
+         IOHelper.CreateFile( file, teststring );
 
          Assert.That( File.Exists( file ), Is.True, $"File {file} should have been created, but does not exist!" );
       }
@@ -418,8 +418,8 @@ namespace SIEDA.FileIO.Testing
          var file2 = Path.Combine( Path.Combine( testDir, "CreateFile" ), "testfile2.txt" );
          var teststring = "hallo world";
 
-         FileIO.CreateFile( file1, teststring );
-         FileIO.CreateFile( file2, Encoding.BigEndianUnicode.GetBytes( teststring ) );
+         IOHelper.CreateFile( file1, teststring );
+         IOHelper.CreateFile( file2, Encoding.BigEndianUnicode.GetBytes( teststring ) );
 
          Assert.That( File.Exists( file1 ), Is.True );
          Assert.That( File.Exists( file2 ), Is.True );
