@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,6 +49,14 @@ namespace SIEDA.FileIO
                   if( isFile ) File.Delete( p ); else Directory.Delete( p, true );
                   // exception? if no, we are finished;
                   deleteWasScheduled = true;
+               }
+               catch( SecurityException e ) //makes no sense waiting for permissions, that is NOT an IO-issue that will fix itself by waiting...
+               {
+                  throw new IOException( $"Insufficient permissions to access '{p}', cannot perform deletion!", e );
+               }
+               catch( UnauthorizedAccessException e ) //makes no sense waiting for permissions, that is NOT an IO-issue that will fix itself by waiting...
+               {
+                  throw new IOException( $"Insufficient permissions to access '{p}', cannot perform deletion!", e );
                }
                catch( Exception e )
                {
