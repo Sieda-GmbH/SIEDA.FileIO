@@ -45,6 +45,36 @@ namespace SIEDA.FileIO.Testing
       public void CreateDir()
       {
          var dir = Path.Combine( Path.Combine( Path.GetFullPath( testDir ), "CreateDir" ), "my little directory with spaces" );
+         IOHelper.CreateDir( dir );
+
+         Assert.That( Directory.Exists( dir ), Is.True );
+      }
+
+      [Test]
+      public void CreateDirAnew()
+      {
+         var dir = Path.Combine( Path.Combine( Path.GetFullPath( testDir ), "CreateDirAnew" ), "somedir" );
+         IOHelper.CreateDir( dir );
+         var file = Path.Combine( dir, "myfile.txt" );
+         IOHelper.CreateFile( file );
+         Assert.That( File.Exists( file ), Is.True );
+
+         IOHelper.CreateDirAnew( dir );
+         Assert.That( File.Exists( file ), Is.False );
+      }
+
+      [Test]
+      public void CreateDirDoesNotReplace()
+      {
+         var dir = Path.Combine( Path.Combine( Path.GetFullPath( testDir ), "CreateDirDoesNotReplace" ), "my little directory with spaces" );
+         IOHelper.CreateDir( dir );
+         Assert.Throws<ArgumentException>( () => IOHelper.CreateDir( dir ) );
+      }
+
+      [Test]
+      public void EnsureDirExists()
+      {
+         var dir = Path.Combine( Path.Combine( Path.GetFullPath( testDir ), "CreateDir" ), "my little directory with spaces" );
          IOHelper.EnsureDirExists( dir );
 
          Assert.That( Directory.Exists( dir ), Is.True );
@@ -63,8 +93,11 @@ namespace SIEDA.FileIO.Testing
          Func<string, string> MakeInput = (string casename) =>
             Path.Combine( Path.Combine( dirForTest, casename ), "3k%f:4,h<.(f{d{s;@k#^h&j!" );
 
-         Assert.Throws<IOException>( () => IOHelper.EnsureDirExists( MakeInput( "CreateDir" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.CreateDir( MakeInput( "CreateDir" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.CreateDirAnew( MakeInput( "CreateDirAnew" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.EnsureDirExists( MakeInput( "EnsureDirExists" ) ) );
          Assert.Throws<IOException>( () => IOHelper.CreateFile( MakeInput( "CreateFile" ) ) );
+         Assert.Throws<IOException>( () => IOHelper.CreateFileAnew( MakeInput( "CreateFileAnew" ) ) );
          Assert.Throws<ArgumentException>( () => IOHelper.Move( MakeInput( "MoveFrom" ), existingDir ) );
          Assert.Throws<ArgumentException>( () => IOHelper.Copy( MakeInput( "CreateFrom" ), existingDir ) );
          Assert.Throws<IOException>( () => IOHelper.Move( existingDir, MakeInput( "MoveTo" ) ) );
@@ -130,9 +163,9 @@ namespace SIEDA.FileIO.Testing
       }
 
       [Test]
-      public void CreateDoesNotOverwrite()
+      public void CreateFileDoesNotReplace()
       {
-         var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
+         var dir = Path.Combine( testDir, "CreateFileDoesNotReplace" );
          var file = Path.Combine( dir, "testfile.txt" );
          IOHelper.CreateFile( file, new byte[] { 1, 2, 3, 4, 5 } );
 
@@ -142,9 +175,9 @@ namespace SIEDA.FileIO.Testing
       }
 
       [Test]
-      public void CreateAnew()
+      public void CreateFileAnew()
       {
-         var dir = Path.Combine( testDir, "CreateDoesNotOverwrite" );
+         var dir = Path.Combine( testDir, "CreateFileAnew" );
          var file = Path.Combine( dir, "testfile.txt" );
          IOHelper.CreateFile( file, new byte[] { 1,2,3,4,5 } );
          IOHelper.CreateFileAnew( file, new byte[] { 6, 7, 8, 9 } );
@@ -222,7 +255,7 @@ namespace SIEDA.FileIO.Testing
       }
 
       [Test]
-      public void CopyWithOverwrite()
+      public void CopyWithReplace()
       {
          var dirA = Path.Combine( Path.Combine( testDir, "CopyInPartExist" ), "a" );
          var subDirA1 = Path.Combine( dirA, "subdir1" );
@@ -248,7 +281,7 @@ namespace SIEDA.FileIO.Testing
          IOHelper.EnsureDirExists( subDirB1 );   // B's dir-structure exists partially and...
          IOHelper.CreateFile( oldFileInB );// ...has an existing file in there!
 
-         IOHelper.Copy( dirA, dirB, true /* must overwrite */ );
+         IOHelper.Copy( dirA, dirB, true /* must replace */ );
 
          Assert.That( Directory.Exists( dirA ), Is.True ); // old directory exists...
          Assert.That( File.Exists( fileA ), Is.True ); // ...and has the right content...

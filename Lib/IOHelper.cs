@@ -109,12 +109,12 @@ namespace SIEDA.FileIO
       ///</summary>
       ///<param name="source">a filepath to the file or directory you want to copy somewhere else</param>
       ///<param name="destination">a filepath detailing a (usually nonexistent) file or directory, specifying the target destination</param>
-      ///<param name="overwrite">if 'false', throw an exception if the target exists, otherwise first delete present data and then copy.</param>
+      ///<param name="replace">if 'false', throw an exception if the target exists, otherwise first delete present data and then copy.</param>
       ///<param name="timeToWaitForCopyInSeconds">max amount of time to wait for the OS to actually perform a single copy operation, defaults to 20</param>
       ///<exception cref="TimeoutException">if the timeout is reached and the copy cannot be guaranteed</exception> 
       ///<exception cref="ArgumentException">if source or target do not exist or are otherwise invalid</exception> 
       ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
-      public static void Copy( string source, string destination, bool overwrite = false, int timeToWaitForCopyInSeconds = 20 )
+      public static void Copy( string source, string destination, bool replace = false, int timeToWaitForCopyInSeconds = 20 )
       {
          var s = Path.GetFullPath( source );
          var d = Path.GetFullPath( destination );
@@ -135,7 +135,7 @@ namespace SIEDA.FileIO
 
          if( isFile && File.Exists( d ) || !isFile && Directory.Exists( d ) )
          {
-            if( overwrite )
+            if( replace )
             {
                Delete( d );
             }
@@ -337,7 +337,7 @@ namespace SIEDA.FileIO
       ///</summary>
       ///<param name="targetPath">directory to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
-      ///<exception cref="ArgumentException">if the directory already exists (we allow no overwrite when using this method)</exception> 
+      ///<exception cref="ArgumentException">if the directory already exists (we allow no replace when using this method)</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
       ///<exception cref="ArgumentException">if the path is invalid</exception> 
       ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
@@ -378,7 +378,7 @@ namespace SIEDA.FileIO
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no replace when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if the path is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -410,7 +410,7 @@ namespace SIEDA.FileIO
       ///<param name="contentToWrite">the content to write into the file</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no replace when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -445,7 +445,7 @@ namespace SIEDA.FileIO
       ///<param name="contentToWrite">the content to write into the file</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no replace when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -472,12 +472,12 @@ namespace SIEDA.FileIO
          ActuallyCreateFile( targetFile, contentToWrite, true, timeToWaitInSeconds );
       }
 
-      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, bool overwrite, int timeToWaitInSeconds)
+      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, bool replace, int timeToWaitInSeconds)
       {
          var p = Path.GetFullPath( targetFile );
          if( File.Exists( p ) )
          {
-            if( overwrite )
+            if( replace )
             {
                Delete( p, timeToWaitInSeconds );
             }
