@@ -11,14 +11,14 @@
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO.TestSuite</AssemblyName>
-      <TargetFramework>net5.0</TargetFramework>
+      <TargetFramework>net6.0</TargetFramework>
       <IsPackable>false</IsPackable>
 
       <!-- generating C# Documentation -->
       <GenerateDocumentationFile>false</GenerateDocumentationFile>
       
       <!-- for details, see LICENSE-file in this repository -->
-      <Copyright>Copyright © 2020 SIEDA GmbH Kaiserslautern</Copyright>
+      <Copyright>Copyright © 2021-2022 SIEDA GmbH Kaiserslautern</Copyright>
 
       <!-- signing compiled output -->
       <SignAssembly>true</SignAssembly>
