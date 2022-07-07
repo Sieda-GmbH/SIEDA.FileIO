@@ -1,4 +1,5 @@
 cd Lib
+dotnet build --configuration Release --framework net6.0
 dotnet build --configuration Release --framework net5.0
 dotnet build --configuration Release --framework net462
 dotnet build --configuration Release --framework net48
