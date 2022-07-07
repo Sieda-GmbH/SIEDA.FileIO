@@ -314,7 +314,7 @@ namespace SIEDA.FileIO
 
       ///<summary>
       ///<para>Ensures the specified directory-path exists.</para>
-      ///<para>This method recursively creates all required sub-directories to achieve this goal.</para>
+      ///<para>This method also ensures all required parent-directories exist, creating them if necessary.</para>
       ///</summary>
       ///<param name="targetPath">directory to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
@@ -329,9 +329,32 @@ namespace SIEDA.FileIO
             ActuallyCreateDir( p, timeToWaitInSeconds );
          }
       }
+
+      ///<summary>
+      ///<para>Creates the specified directory-path, unless that directory already exists!</para>
+      ///<para>NOTE: For creating directories, using the method <see cref="EnsureDirExists(string, int)"/> is often more advisable.</para>
+      ///<para>This method ensures all required parent-directories exist, creating them if necessary.</para>
+      ///</summary>
+      ///<param name="targetPath">directory to create</param>
+      ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
+      ///<exception cref="ArgumentException">if the directory already exists (we allow no overwrite when using this method)</exception> 
+      ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
+      ///<exception cref="ArgumentException">if the path is invalid</exception> 
+      ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
+      public static void CreateDir( string targetPath, int timeToWaitInSeconds = 30 )
+      {
+         var p = Path.GetFullPath( targetPath );
+         if( Directory.Exists( p ) )
+         {
+            throw new ArgumentException( $"Directory '{p}' already exists!" );
+         }
+         ActuallyCreateDir( p, timeToWaitInSeconds );
+      }
+
       ///<summary>
       ///<para>Ensures the specified directory-path exists *and* is fresh, eliminating any existing directory if necessary.</para>
-      ///<para>This method recursively creates all required sub-directories to achieve this goal, but only the specified directory is replaced if necessary.</para>
+      ///<para>This method ensures all required parent-directories exist, creating them if necessary, but only the specified directory
+      ///is replaced and created anew (should that be necessary).</para>
       ///</summary>
       ///<param name="targetPath">directory to recreate</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory, defaults to 20</param>
@@ -355,7 +378,7 @@ namespace SIEDA.FileIO
       ///<param name="targetFile">a filepath to the file you want to create</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if the path is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -387,7 +410,7 @@ namespace SIEDA.FileIO
       ///<param name="contentToWrite">the content to write into the file</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -422,7 +445,7 @@ namespace SIEDA.FileIO
       ///<param name="contentToWrite">the content to write into the file</param>
       ///<param name="timeToWaitInSeconds">max amount of time to wait for the OS to actually create the directory structure and target file,
       ///defaults to 20</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite)</exception> 
+      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite when using this method)</exception> 
       ///<exception cref="ArgumentNullException">if path or given content is NULL</exception> 
       ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
       ///<exception cref="TimeoutException">if the creation's success cannot be determined after the timeout</exception> 
@@ -490,9 +513,7 @@ namespace SIEDA.FileIO
       ///<para>Note: Obviously, this method reads the contents of this file to do that. Parallel writes might produce unwanted results.</para>
       ///</summary>
       ///<param name="targetFile">a filepath to the file you want to create</param>
-      ///<exception cref="ArgumentException">if the file already exists (we allow no overwrite)</exception> 
-      ///<exception cref="IOException">if the file cannot be created for whatever reason</exception> 
-      ///<exception cref="TimeoutException">if the creation's success cannot be determined after 20 seconds</exception> 
+      ///<exception cref="ArgumentException">if the file does not exist</exception> 
       ///<exception cref="IOException">if any other IO-related issue occurs, such as missing permissions for the operation.</exception>
       ///<returns>an upper-case, human-readable MD5-Hash</returns>
       public static string ComputeMd5HashForFile( string targetFile )
