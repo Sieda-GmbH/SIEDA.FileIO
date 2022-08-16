@@ -472,7 +472,7 @@ namespace SIEDA.FileIO
          ActuallyCreateFile( targetFile, contentToWrite, true, timeToWaitInSeconds );
       }
 
-      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, bool replace, int timeToWaitInSeconds)
+      private static void ActuallyCreateFile( string targetFile, byte[] contentToWrite, bool replace, int timeToWaitInSeconds )
       {
          var p = Path.GetFullPath( targetFile );
          if( File.Exists( p ) )

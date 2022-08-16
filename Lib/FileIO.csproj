@@ -24,7 +24,7 @@
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO</AssemblyName>
       <TargetFramework>net6.0</TargetFramework>
-      <TargetFrameworks>net6.0;net5.0;netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
+      <TargetFrameworks>net6.0;netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
 
       <!-- generating C# Documentation -->
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
