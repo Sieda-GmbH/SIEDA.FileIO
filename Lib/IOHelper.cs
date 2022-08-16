@@ -191,7 +191,7 @@ namespace SIEDA.FileIO
          var path = "";
          foreach( var p in dir.Split( Path.DirectorySeparatorChar ) )
          {
-            path = ( path.Length == 0 ) ? (p + Path.DirectorySeparatorChar) : Path.Combine( path, p );
+            path = ( path.Length == 0 ) ? ( p + Path.DirectorySeparatorChar ) : Path.Combine( path, p );
             if( File.Exists( path ) )
             {
                throw new ArgumentException( //create precise exception for the user
@@ -212,9 +212,11 @@ namespace SIEDA.FileIO
             }
             catch( Exception e )
             {
+               //no matter what goes wrong, we throw (and abort the operation)
                throw new IOException( $"Failed to create directory '{path}'", e );
             }
 
+            //alright, no exception, that means we wait for the op to complete... 
             int maxMillis = Math.Max( 2, timeToWait ) * 1000;
             var lastMillis = Environment.TickCount;
             var currentMillis = 0;
@@ -276,6 +278,14 @@ namespace SIEDA.FileIO
 
                //exit the loop!
                return;
+            }
+            catch( SecurityException e ) //makes no sense waiting for permissions, that is NOT an IO-issue that will fix itself by waiting...
+            {
+               throw new IOException( $"Insufficient permissions to access '{file}', cannot perform operation!", e );
+            }
+            catch( UnauthorizedAccessException e ) //makes no sense waiting for permissions, that is NOT an IO-issue that will fix itself by waiting...
+            {
+               throw new IOException( $"Insufficient permissions to access '{file}', cannot perform operation!", e );
             }
             catch( Exception e )
             {
