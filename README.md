@@ -26,7 +26,7 @@ Different variants exist for most of these methods and some additional functiona
       public static void Delete( string toDelete, int timeToWaitForDeletionInSeconds = 20 ) { /* ... */ }
 
       //Duplicates a file or directory on the drive at another location. Method blocks until the copy is finished by the OS (or the timeout is reached).
-      public static void Copy( string source, string destination, bool overwrite = false, int timeToWaitForCopyInSeconds = 20 ) { /* ... */ }
+      public static void Copy( string source, string destination, bool replace = false, int timeToWaitForCopyInSeconds = 20 ) { /* ... */ }
 
       //Moves a file or directory on the drive at another location. Method blocks until the movement of said target is finished by the OS (or the timeout is reached).
       public static void Move( string source, string destination, int timeToWaitForMoveInSeconds = 20 ) { /* ... */ }
@@ -35,6 +35,9 @@ Different variants exist for most of these methods and some additional functiona
       public static void EnsureDirExists( string targetPath, int timeToWaitInSeconds = 20 ) { /* ... */ }
 
       //Creates a file with the specified string (encoded as UTF-8) under the given path, unless that file already exists!
+      //The necessary directory structure is created as well using '<see cref="EnsureDirExists"/>'.
       public static void CreateFile( string targetFile, string contentToWrite, int timeToWaitInSeconds = 20 ) { /* ... */ }
    }
 ```
+
+Further methods exist of course, like `CreateFileAnew(...)`, `CreateDirAnew(...)` and various other ones. Overall, this library aims to cover all the typical usecases when working with files on your drive, in particular in a testing-context.
