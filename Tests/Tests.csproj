@@ -18,7 +18,7 @@
       <GenerateDocumentationFile>false</GenerateDocumentationFile>
       
       <!-- for details, see LICENSE-file in this repository -->
-      <Copyright>Copyright © 2021-2022 SIEDA GmbH Kaiserslautern</Copyright>
+      <Copyright>Copyright © 2021-2026 SIEDA GmbH Kaiserslautern</Copyright>
 
       <!-- signing compiled output -->
       <SignAssembly>true</SignAssembly>

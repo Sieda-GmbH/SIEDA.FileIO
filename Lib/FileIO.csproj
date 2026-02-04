@@ -9,7 +9,7 @@
       
    ##############################################################-->
    <PropertyGroup>
-      <VersionPrefix>2.2.2.0</VersionPrefix>
+      <VersionPrefix>2.3.0.0</VersionPrefix>
    </PropertyGroup>
    
    <!--#############################################################################################################################
@@ -23,14 +23,14 @@
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO</AssemblyName>
-      <TargetFramework>net6.0</TargetFramework>
-      <TargetFrameworks>net6.0;netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
+      <TargetFramework>net8.0</TargetFramework>
+      <TargetFrameworks>net8.0;net6.0;netstandard2.1;netcoreapp3.1;net462;net48</TargetFrameworks>
 
       <!-- generating C# Documentation -->
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
       
       <!-- for details, see LICENSE-file in this repository -->
-      <Copyright>Copyright © 2021-2022 SIEDA GmbH Kaiserslautern</Copyright>
+      <Copyright>Copyright © 2021-2026 SIEDA GmbH Kaiserslautern</Copyright>
 
       <!-- signing compiled output -->
       <SignAssembly>true</SignAssembly>
@@ -53,12 +53,14 @@
       <PackageLicenseFile>LICENSE</PackageLicenseFile>
       <PackageIcon>logo.png</PackageIcon>
       <RepositoryType>git</RepositoryType>
+      <PackageTags>io;file;files;drive;read;write;fileIO</PackageTags>
        <!-- display no weird dialogs to prevent command-line usage. License is still in effect of course! -->
       <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
    </PropertyGroup>
    <ItemGroup>
       <!-- include non-source code files for NuGet-Package -->
       <None Include="..\LICENSE" Pack="true" PackagePath=""/>
+      <None Include="..\README.md" Pack="true" PackagePath="" />
       <None Include="..\logo.png" Pack="true" PackagePath=""/>
    </ItemGroup>
 
