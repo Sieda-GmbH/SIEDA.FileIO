@@ -11,7 +11,7 @@
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO.TestSuite</AssemblyName>
-      <TargetFramework>net6.0</TargetFramework>
+      <TargetFramework>net8.0</TargetFramework>
       <IsPackable>false</IsPackable>
 
       <!-- generating C# Documentation -->
