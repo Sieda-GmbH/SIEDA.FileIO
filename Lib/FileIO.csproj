@@ -22,7 +22,7 @@
    #################################################################################################################################-->
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
-      <AssemblyName>SIEDA.Monadic</AssemblyName>
+      <AssemblyName>SIEDA.FileIO</AssemblyName>
       <TargetFramework>net10.0</TargetFramework>
       <TargetFrameworks>net10.0;net8.0;netstandard2.1;net48</TargetFrameworks>
 
