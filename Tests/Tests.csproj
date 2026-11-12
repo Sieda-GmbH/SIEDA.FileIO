@@ -11,7 +11,7 @@
    <PropertyGroup>
       <!-- the IMPORTANT ones -->
       <AssemblyName>SIEDA.FileIO.TestSuite</AssemblyName>
-      <TargetFramework>net8.0</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <IsPackable>false</IsPackable>
 
       <!-- generating C# Documentation -->
@@ -36,9 +36,9 @@
 
    <ItemGroup>
       <!-- external dependencies which we aquire via NuGet -->
-      <PackageReference Include="nunit" Version="3.10.1" />
-      <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+      <PackageReference Include="NUnit" Version="4.6.1" />
+      <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.1" />
    </ItemGroup>
    
    <ItemGroup>
